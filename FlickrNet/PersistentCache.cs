@@ -13,7 +13,7 @@ namespace FlickrNet
     /// protected by the lockFile.  Private methods should
     /// not acquire the lockFile as it is not reentrant.
     /// </summary>
-    public sealed class PersistentCache : IDisposable
+    public sealed class PersistentCache : IDisposable, ICacheStore
     {
         // The in-memory representation of the cache.
         // Use SortedList instead of Hashtable only to maintain backward 
@@ -82,6 +82,17 @@ namespace FlickrNet
                 }
                 if (oldItem != null)
                     oldItem.OnItemFlushed();
+            }
+        }
+
+        /// <summary>
+        /// Gets cache values.
+        /// </summary>
+        public ICacheItem this[string key, TimeSpan maxAge, bool removeIfExpired]
+        {
+            get
+            {
+                return Get(key, maxAge, removeIfExpired);
             }
         }
 

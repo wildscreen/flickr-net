@@ -11,19 +11,25 @@ namespace FlickrNet
     /// </summary>
     public static class Cache
     {
-        private static PersistentCache responses;
+        private static ICacheStore responses;
 
         /// <summary>
         /// A static object containing the list of cached responses from Flickr.
         /// </summary>
-        public static PersistentCache Responses
+        public static ICacheStore Responses
         {
             get
             {
                 lock (lockObject)
                 {
                     if (responses == null)
+#if SQLITE
+                        responses = new SQLiteCache(Path.Combine(CacheLocation, "responseCache.dat"), new ResponseCacheItemPersister());
+#else
                         responses = new PersistentCache(Path.Combine(CacheLocation, "responseCache.dat"), new ResponseCacheItemPersister());
+#endif
+
+
                     return responses;
                 }
             }
@@ -253,6 +259,57 @@ namespace FlickrNet
         /// </summary>
         long FileSize { get; }
     }
+
+    /// <summary>
+    /// An interface for storing/retrieving cache items.
+    /// </summary>
+    public interface ICacheStore
+    {
+
+        /// <summary>
+        /// Clears the current cache of items.
+        /// </summary>
+        void Flush();
+
+
+        /// <summary>
+        /// Gets the specified key from the cache unless it has expired.
+        /// </summary>
+        /// <param name="key">The key to look up in the cache.</param>
+        /// <param name="maxAge">The maximum age the item can be before it is no longer returned.</param>
+        /// <param name="removeIfExpired">Whether to delete the item if it has expired or not.</param>
+        /// <returns></returns>
+        ICacheItem Get(string key, TimeSpan maxAge, bool removeIfExpired);
+
+
+         /// <summary>
+        /// Shrinks the current cache to a specific size, removing older items first.
+        /// </summary>
+        /// <param name="size"></param>
+        void Shrink(long size);
+
+
+        /// <summary>
+        /// Sets cache values.
+        /// </summary>
+        ICacheItem this[string key]
+        {
+            set;
+        }
+
+
+        /// <summary>
+        /// Gets cache values.
+        /// </summary>
+        ICacheItem this[string key, TimeSpan maxAge, bool removeIfExpired]
+        {
+            get;
+        }
+
+    }
+
+
+
 
     /// <summary>
     /// An interface that knows how to read/write subclasses

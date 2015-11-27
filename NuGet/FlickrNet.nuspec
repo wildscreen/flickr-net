@@ -12,6 +12,9 @@
     <description>The Flickr.Net API Library is a .Net Library for accessing the Flickr API.</description>
     <language>en-US</language>
     <tags>flickr photo photography social</tags>
+    <dependencies>
+        <dependency id="System.Data.SQLite.Core.MSIL" version="1.0.98.1" />
+    </dependencies>
   </metadata>
   <files>
     <!--<file src="..\Builds\FlickrNet.chm" target="content\FlickrNet.chm" />-->
