@@ -20,6 +20,11 @@ namespace FlickrNet
     internal static class UtilityMethods
     {
         private static readonly DateTime UnixStartDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        
+#if SQLITE
+        //for cache consistency, remove everything auth related except oauth_consumer_key, as results may be different depending on user
+        private static readonly string[] uriKeysToRemoveForCache = new[] { "oauth_nonce", "oauth_timestamp", "oauth_version", "oauth_signature_method", "api_sig"};
+#endif
 
         /// <summary>
         /// Converts <see cref="AuthLevel"/> to a string.
@@ -670,6 +675,43 @@ namespace FlickrNet
 
             return sb.ToString();
         }
+
+#if SQLITE
+        //adapted from http://stackoverflow.com/a/11080157
+        public static Uri RemoveQueryStringByKeys(Uri uri, IEnumerable<string> keys)
+        {
+
+            return new Uri(RemoveQueryStringByKeys(null, keys, uri));
+        }
+
+        public static string RemoveQueryStringByKeys(string url, IEnumerable<string> keys, Uri uri = null)
+        {
+            if (uri == null) uri = new Uri(url);
+
+            // this gets all the query string key value pairs as a collection
+            var newQueryString = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            foreach (var key in keys)
+            {
+                // this removes the key if exists
+                newQueryString.Remove(key);
+            }
+
+            // this gets the page path from root without QueryString
+            string pagePathWithoutQueryString = uri.GetLeftPart(UriPartial.Path);
+
+            return
+                newQueryString.Count > 0
+                ? String.Format("{0}?{1}", pagePathWithoutQueryString, newQueryString)
+                : pagePathWithoutQueryString;
+        }
+
+        public static string NormaliseUriForCache(string uri)
+        {
+            return RemoveQueryStringByKeys(uri, uriKeysToRemoveForCache);
+        }
+
+
+#endif
     }
 
 }

@@ -70,9 +70,11 @@ namespace FlickrNet
             }
             else
             {
-                var urlComplete = url;
-
-                var cached = (ResponseCacheItem)Cache.Responses.Get(urlComplete, cacheTimeout, true);
+                var urlForCache = url;
+#if SQLITE
+                urlForCache = UtilityMethods.NormaliseUriForCache(url);
+#endif
+                var cached = (ResponseCacheItem)Cache.Responses.Get(urlForCache, cacheTimeout, true);
                 if (cached != null)
                 {
                     Debug.WriteLine("Cache hit.");
@@ -83,10 +85,10 @@ namespace FlickrNet
                     Debug.WriteLine("Cache miss.");
                     responseXml = FlickrResponder.GetDataResponse(this, BaseUri.AbsoluteUri, parameters);
 
-                    var resCache = new ResponseCacheItem(new Uri(urlComplete), responseXml, DateTime.UtcNow);
+                    var resCache = new ResponseCacheItem(new Uri(urlForCache), responseXml, DateTime.UtcNow);
 
                     Cache.Responses.Shrink(Math.Max(0, Cache.CacheSizeLimit - responseXml.Length));
-                    Cache.Responses[urlComplete] = resCache;
+                    Cache.Responses[urlForCache] = resCache;
                 }
             }
 
