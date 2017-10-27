@@ -4,8 +4,8 @@
     <version>3.4.0</version>
     <authors>Sam Judson</authors>
     <owners>Sam Judson</owners>
-    <licenseUrl>http://flickrnet.codeplex.com/license</licenseUrl>
-    <projectUrl>http://flickrnet.codeplex.com/</projectUrl>
+    <projectUrl>https://github.com/samjudson/flickr-net</projectUrl>
+    <licenseUrl>https://github.com/samjudson/flickr-net/blob/master/LICENSE</licenseUrl>
     <id>FlickrNet.Silverlight</id>
     <title>FlickrNet API Library for Silverlight</title>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -14,7 +14,6 @@
     <tags>flickr photo photography social</tags>
   </metadata>
   <files>
-    <file src="..\Builds\FlickrNet.chm" target="content\FlickrNet\FlickrNet.chm" />
     <file src="..\Builds\FlickrNetSilverlight.pdb" target="lib\sl30\FlickrNetSilverlight.pdb" />
     <file src="..\Builds\FlickrNetSilverlight.dll" target="lib\sl30\FlickrNetSilverlight.dll" />
   </files>

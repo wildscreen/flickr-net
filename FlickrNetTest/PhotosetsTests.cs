@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using FlickrNet;
 using NUnit.Framework;
+using Shouldly;
 
 namespace FlickrNetTest
 {
@@ -81,14 +82,14 @@ namespace FlickrNetTest
         [Category("AccessTokenRequired")]
         public void PhotosetsGetListWithExtras()
         {
-            var sets = AuthInstance.PhotosetsGetList(TestData.TestUserId, 1, 5, PhotoSearchExtras.All);
+            var testUserPhotoSets = AuthInstance.PhotosetsGetList(TestData.TestUserId, 1, 5, PhotoSearchExtras.All);
 
-            Assert.AreNotEqual(0, sets.Count, "Should have returned at least 1 set for the authenticated user.");
+            testUserPhotoSets.Count.ShouldBeGreaterThan(0, "Should have returned at least 1 set for the authenticated user.");
 
-            var firstSet = sets.First();
+            var firstPhotoSet = testUserPhotoSets.First();
 
-            Assert.IsNotNull(firstSet.PrimaryPhoto, "Primary Photo should not be null.");
-            Assert.IsNotNullOrEmpty(firstSet.PrimaryPhoto.LargeSquareThumbnailUrl, "LargeSquareThumbnailUrl should not be empty.");
+            firstPhotoSet.PrimaryPhoto.ShouldNotBeNull("Primary Photo should not be null.");
+            firstPhotoSet.PrimaryPhoto.LargeSquareThumbnailUrl.ShouldNotBeNullOrEmpty("LargeSquareThumbnailUrl should not be empty.");
         }
 
         [Test]
@@ -113,40 +114,42 @@ namespace FlickrNetTest
             byte[] imageBytes = TestData.TestImageBytes;
             var s = new MemoryStream(imageBytes);
 
-            const string title = "Test Title";
-            const string title2 = "New Test Title";
-            const string desc = "Test Description\nSecond Line";
-            const string desc2 = "New Test Description";
-            const string tags = "testtag1,testtag2";
+            const string initialPhotoTitle = "Test Title";
+            const string updatedPhotoTitle = "New Test Title";
+            const string initialPhotoDescription = "Test Description\nSecond Line";
+            const string updatedPhotoDescription = "New Test Description";
+            const string initialTags = "testtag1,testtag2";
 
             s.Position = 0;
             // Upload photo once
-            var photoId1 = AuthInstance.UploadPicture(s, "Test.jpg", title, desc, tags, false, false, false, ContentType.Other, SafetyLevel.Safe, HiddenFromSearch.Visible);
-            Console.WriteLine("Photo 1 created: " + photoId1);
+            var photoId1 = AuthInstance.UploadPicture(s, "Test1.jpg", initialPhotoTitle, initialPhotoDescription, initialTags, false, false, false, ContentType.Other, SafetyLevel.Safe, HiddenFromSearch.Visible);
 
             s.Position = 0;
             // Upload photo a second time
-            var photoId2 = AuthInstance.UploadPicture(s, "Test.jpg", title, desc, tags, false, false, false, ContentType.Other, SafetyLevel.Safe, HiddenFromSearch.Visible);
-            Console.WriteLine("Photo 2 created: " + photoId2);
+            var photoId2 = AuthInstance.UploadPicture(s, "Test2.jpg", initialPhotoTitle, initialPhotoDescription, initialTags, false, false, false, ContentType.Other, SafetyLevel.Safe, HiddenFromSearch.Visible);
 
             // Creat photoset
             Photoset photoset = AuthInstance.PhotosetsCreate("Test photoset", photoId1);
-            Console.WriteLine("Photoset created: " + photoset.PhotosetId);
 
             try
             {
+                var photos = AuthInstance.PhotosetsGetPhotos(photoset.PhotosetId, PhotoSearchExtras.OriginalFormat | PhotoSearchExtras.Media, PrivacyFilter.None, 1, 30, MediaType.None);
+
+                photos.Count.ShouldBe(1, "Photoset should contain 1 photo");
+                photos[0].IsPublic.ShouldBe(false, "Photo 1 should be private");
+
                 // Add second photo to photoset.
                 AuthInstance.PhotosetsAddPhoto(photoset.PhotosetId, photoId2);
 
                 // Remove second photo from photoset
                 AuthInstance.PhotosetsRemovePhoto(photoset.PhotosetId, photoId2);
 
-                AuthInstance.PhotosetsEditMeta(photoset.PhotosetId, title2, desc2);
+                AuthInstance.PhotosetsEditMeta(photoset.PhotosetId, updatedPhotoTitle, updatedPhotoDescription);
 
                 photoset = AuthInstance.PhotosetsGetInfo(photoset.PhotosetId);
 
-                Assert.AreEqual(title2, photoset.Title, "New Title should be set.");
-                Assert.AreEqual(desc2, photoset.Description, "New description should be set");
+                photoset.Title.ShouldBe(updatedPhotoTitle, "New Title should be set.");
+                photoset.Description.ShouldBe(updatedPhotoDescription, "New description should be set");
 
                 AuthInstance.PhotosetsEditPhotos(photoset.PhotosetId, photoId1, new[] { photoId2, photoId1 });
 

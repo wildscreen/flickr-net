@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Text;
-using System.Collections.Generic;
 using System.Linq;
 using FlickrNet.Exceptions;
 using NUnit.Framework;
 using FlickrNet;
 using System.Reactive.Subjects;
 using System.Reactive.Linq;
-
+using Shouldly;
 
 namespace FlickrNetTest
 {
@@ -214,14 +212,12 @@ namespace FlickrNetTest
         }
 
         [Test]
-        [ExpectedException(typeof(PhotoNotFoundException))]
         public void TestPhotoNotFound()
         {
-            Instance.PhotosGetInfo("abcd");
+            Should.Throw< PhotoNotFoundException>(() => Instance.PhotosGetInfo("abcd"));
         }
 
         [Test]
-        [ExpectedException(typeof(PhotoNotFoundException))]
         public void TestPhotoNotFoundAsync()
         {
             var w = new AsyncSubject<FlickrResult<PhotoInfo>>();
@@ -229,8 +225,8 @@ namespace FlickrNetTest
             Instance.PhotosGetInfoAsync("abcd", r => { w.OnNext(r); w.OnCompleted(); });
             var result = w.Next().First();
 
-            Assert.IsTrue(result.HasError);
-            throw result.Error;
+            result.HasError.ShouldBeTrue();
+            result.Error.ShouldBeOfType<PhotoNotFoundException>();
         }
 
         [Test]
@@ -273,6 +269,16 @@ namespace FlickrNetTest
 
             Assert.AreEqual(photo.LargeUrl, info.LargeUrl);
             Assert.AreEqual(photo.Small320Url, info.Small320Url);
+        }
+
+        [Test]
+        [TestCase("46611802@N00", "")]
+        [TestCase("51266254@N00", "Curitiba, Brazil")]
+        public void GetInfoWithInvalidXmlTests(string userId, string location)
+        {
+            var userInfo = Instance.PeopleGetInfo(userId);
+            Assert.That(userInfo.UserId, Is.EqualTo(userId));
+            Assert.That(userInfo.Location, Is.EqualTo(location));
         }
 
     }

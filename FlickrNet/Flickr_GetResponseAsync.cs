@@ -4,6 +4,8 @@ using System.Xml;
 using System.IO;
 using System.Collections.Generic;
 
+#pragma warning disable CS0618 // Type or member is obsolete
+
 namespace FlickrNet
 {
     public partial class Flickr
@@ -66,28 +68,8 @@ namespace FlickrNet
                             {
                                 lastResponse = r.Result;
 
-                                var settings = new XmlReaderSettings();
-                                settings.IgnoreWhitespace = true;
-                                XmlReader reader = XmlReader.Create(new StringReader(r.Result), settings);
-
-                                if (!reader.ReadToDescendant("rsp"))
-                                {
-                                    throw new XmlException("Unable to find response element 'rsp' in Flickr response");
-                                }
-                                while (reader.MoveToNextAttribute())
-                                {
-                                    if (reader.LocalName == "stat" && reader.Value == "fail")
-                                    {
-                                        throw ExceptionHandler.CreateResponseException(reader);
-                                    }
-                                    continue;
-                                }
-
-                                reader.MoveToElement();
-                                reader.Read();
-
                                 var t = new T();
-                                ((IFlickrParsable)t).Load(reader);
+                                ((IFlickrParsable)t).Load(r.Result);
                                 result.Result = t;
                                 result.HasError = false;
                             }
@@ -146,27 +128,9 @@ namespace FlickrNet
                             string responseXml = sr.ReadToEnd();
 
                             lastResponse = responseXml;
-
-                            var settings = new XmlReaderSettings();
-                            settings.IgnoreWhitespace = true;
-                            XmlReader reader = XmlReader.Create(new StringReader(responseXml), settings);
-
-                            if (!reader.ReadToDescendant("rsp"))
-                            {
-                                throw new XmlException("Unable to find response element 'rsp' in Flickr response");
-                            }
-                            while (reader.MoveToNextAttribute())
-                            {
-                                if (reader.LocalName == "stat" && reader.Value == "fail")
-                                    throw ExceptionHandler.CreateResponseException(reader);
-                                continue;
-                            }
-
-                            reader.MoveToElement();
-                            reader.Read();
-
+                            
                             var t = new T();
-                            ((IFlickrParsable)t).Load(reader);
+                            ((IFlickrParsable)t).Load(responseXml);
                             result.Result = t;
                             result.HasError = false;
 

@@ -10,7 +10,7 @@ namespace FlickrNetTest
     ///to contain all FlickrNet.Utils Unit Tests
     ///</summary>
     [TestFixture]
-    public class UtilityMethodsTests
+    public class UtilityMethodsTests : BaseTest
     {
         readonly Dictionary<DateTime, string> _timestampTests = new Dictionary<DateTime, string>
                                                                             {
@@ -417,7 +417,7 @@ namespace FlickrNetTest
             var extension = "jpg";
             var expected = "https://farm9.staticflickr.com/8162/7176125763_7eac68f450.jpg";
 
-            var photoInfo = TestData.GetAuthInstance().PhotosGetInfo(photoId);
+            var photoInfo = AuthInstance.PhotosGetInfo(photoId);
 
             var actual = UtilityMethods.UrlFormat(photoInfo, size, extension);
 
@@ -461,5 +461,41 @@ namespace FlickrNetTest
             Assert.AreEqual(string.Empty, b);
         }
 
+        [Test]
+        public void StylesToString_ParameterIsNull_ThrowsException()
+        {
+            Assert.Throws<ArgumentNullException>(() => UtilityMethods.StylesToString(null));
+        }
+
+        [Test]
+        public void StyleToString_ParameterIsEmpty_ReturnsEmptyString()
+        {
+            Assert.AreEqual(UtilityMethods.StylesToString(new List<Style>()), string.Empty);
+        }
+
+        [TestCase(Style.BlackAndWhite, "blackandwhite")]
+        [TestCase(Style.DepthOfField, "depthoffield")]
+        [TestCase(Style.Minimalism, "minimalism")]
+        [TestCase(Style.Pattern, "pattern")]
+        public void StylesToString_ConvertsSingletonCollectionIntoString(Style style, string excepted)
+        {
+            Assert.AreEqual(UtilityMethods.StylesToString(new[] { style }), excepted);
+        }
+
+        [TestCase("blackandwhite,depthoffield", Style.BlackAndWhite, Style.DepthOfField)]
+        [TestCase("depthoffield,minimalism,pattern", Style.DepthOfField, Style.Minimalism, Style.Pattern)]
+        [TestCase("minimalism,pattern,depthoffield,blackandwhite", Style.Minimalism, Style.Pattern, Style.DepthOfField, Style.BlackAndWhite)]
+        public void StylesToString_SeparatesValuesByComma(string expected, params Style[] styles)
+        {
+            Assert.AreEqual(UtilityMethods.StylesToString(styles), expected);
+        }
+
+        [TestCase("blackandwhite", Style.BlackAndWhite, Style.BlackAndWhite)]
+        [TestCase("blackandwhite,minimalism", Style.BlackAndWhite, Style.BlackAndWhite, Style.Minimalism, Style.Minimalism)]
+        [TestCase("blackandwhite,pattern,minimalism", Style.BlackAndWhite, Style.BlackAndWhite, Style.Pattern, Style.Minimalism, Style.Minimalism)]
+        public void StylesToString_FiltersOutRecurrences(string expected, params Style[] styles)
+        {
+            Assert.AreEqual(UtilityMethods.StylesToString(styles), expected);
+        }
     }
 }

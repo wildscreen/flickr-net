@@ -110,23 +110,17 @@ namespace FlickrNetTest
         }
 
         [Test]
-        [ExpectedException(typeof (ApiKeyRequiredException))]
         public void PhotosSearchNoApiKey()
         {
             Instance.ApiKey = "";
-            Instance.PhotosSearch(new PhotoSearchOptions());
-
-            Assert.Fail("Shouldn't get here");
+            Should.Throw<ApiKeyRequiredException>(() => Instance.PhotosSearch(new PhotoSearchOptions()));
         }
 
         [Test]
-        [ExpectedException(typeof (ApiKeyRequiredException))]
         public void GetOauthRequestTokenNoApiKey()
         {
             Instance.ApiKey = "";
-            Instance.OAuthGetRequestToken("oob");
-
-            Assert.Fail("Shouldn't get here");
+            Should.Throw<ApiKeyRequiredException>(() => Instance.OAuthGetRequestToken("oob"));
         }
 
         [Test]
@@ -337,6 +331,26 @@ namespace FlickrNetTest
             }
         }
 
+        [TestCase(Style.BlackAndWhite)]
+        [TestCase(Style.DepthOfField)]
+        [TestCase(Style.Minimalism)]
+        [TestCase(Style.Pattern)]
+        public void PhotoSearchByStyles(Style style)
+        {
+            var o = new PhotoSearchOptions
+            {
+                Text = "nature",
+                Page = 1,
+                PerPage = 10,
+                Styles = new[] { style }
+            };
+
+            var photos = Instance.PhotosSearch(o);
+
+            Assert.IsNotNull(photos);
+            Assert.IsNotEmpty(photos);
+        }
+
         [Test]
         public void PhotosSearchIsCommons()
         {
@@ -423,11 +437,11 @@ namespace FlickrNetTest
 
             PhotoCollection photos = Instance.PhotosSearch(o);
 
-            Assert.IsTrue(photos.Total > 0);
-            Assert.IsTrue(photos.Pages > 0);
-            Assert.AreEqual(10, photos.PerPage, "PerPage should be 10.");
-            Assert.AreEqual(10, photos.Count, "Count should be 10.");
-            Assert.AreEqual(1, photos.Page, "Page should be 1.");
+            photos.Total.ShouldBeGreaterThan(0);
+            photos.Pages.ShouldBeGreaterThan(0);
+            photos.PerPage.ShouldBe(10);
+            photos.Page.ShouldBe(1);
+            photos.Count.ShouldBeInRange(9, 10, "Ideally should be 10, but sometimes returns 9");
 
             foreach (Photo photo in photos)
             {
@@ -439,7 +453,7 @@ namespace FlickrNetTest
         // Flickr sometimes returns different totals for the same search when a different perPage value is used.
         // As I have no control over this, and I am correctly setting the properties as returned I am ignoring this test.
         [Test]
-        [Ignore]
+        [Ignore("Flickr often returns different totals than requested.")]
         public void PhotosSearchPerPageMultipleTest()
         {
             var o = new PhotoSearchOptions {Tags = "microsoft"};
@@ -1007,7 +1021,6 @@ namespace FlickrNetTest
         }
 
         [Test]
-        [ExpectedException(typeof(FlickrApiException))]
         public void ExcessiveTagsShouldNotThrowUriFormatException()
         {
             var list = Enumerable.Range(1, 9000).Select(i => "reallybigtag" + i).ToList();
@@ -1015,7 +1028,7 @@ namespace FlickrNetTest
                 Tags = string.Join(",", list)
             };
 
-            var photos = Instance.PhotosSearch(options);
+            Should.Throw<FlickrApiException>(() => Instance.PhotosSearch(options));
         }
     }
 }

@@ -113,9 +113,14 @@ namespace FlickrNet
 
             var dataBuffer = CreateUploadData(imageStream, fileName, parameters, boundary);
 
-            var req = WebRequest.Create(uploadUri);
+            var req = (HttpWebRequest)WebRequest.Create(uploadUri);
             req.Method = "POST";
             req.ContentType = "multipart/form-data; boundary=" + boundary;
+#if (!SILVERLIGHT && !WINDOWS_PHONE)
+            req.SendChunked = true;
+#endif
+            req.AllowWriteStreamBuffering = false;
+
             if (!string.IsNullOrEmpty(authHeader))
             {
                 req.Headers["Authorization"] = authHeader;
@@ -145,24 +150,8 @@ namespace FlickrNet
                                 var responseXml = sr.ReadToEnd();
                                 sr.Close();
 
-                                var settings = new XmlReaderSettings {IgnoreWhitespace = true};
-                                var reader = XmlReader.Create(new StringReader(responseXml), settings);
-
-                                if (!reader.ReadToDescendant("rsp"))
-                                {
-                                    throw new XmlException("Unable to find response element 'rsp' in Flickr response");
-                                }
-                                while (reader.MoveToNextAttribute())
-                                {
-                                    if (reader.LocalName == "stat" && reader.Value == "fail")
-                                        throw ExceptionHandler.CreateResponseException(reader);
-                                }
-
-                                reader.MoveToElement();
-                                reader.Read();
-
                                 var t = new UnknownResponse();
-                                ((IFlickrParsable)t).Load(reader);
+                                ((IFlickrParsable)t).Load(responseXml);
                                 result.Result = t.GetElementValue("photoid");
                                 result.HasError = false;
                             }

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Text;
-using System.Collections.Generic;
 
 using NUnit.Framework;
 using FlickrNet;
@@ -70,10 +68,10 @@ namespace FlickrNetTest
                     // For Gallery events the comment is optional.
                     if (e.EventType != ActivityEventType.Gallery)
                     {
-                        if (e.EventType == ActivityEventType.Note || e.EventType == ActivityEventType.Comment)
+                        if (e.EventType == ActivityEventType.Note || e.EventType == ActivityEventType.Comment || e.EventType == ActivityEventType.Tag)
                             Assert.IsNotNull(e.Value, "Value should not be null for a non-favorite event.");
                         else
-                            Assert.IsNull(e.Value, "Value should be null for a favorite event.");
+                            Assert.IsNull(e.Value, "Value should be null for an event of type " + e.EventType);
                     }
 
                     if (e.EventType == ActivityEventType.Comment)

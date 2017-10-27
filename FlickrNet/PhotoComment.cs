@@ -71,6 +71,12 @@ namespace FlickrNet
         /// </summary>
         public string CommentHtml { get; set; }
 
+
+        /// <summary>
+        /// The account of the author of this comment has been deleted.
+        /// </summary>
+        public bool AuthorIsDeleted { get; set; }
+
         void IFlickrParsable.Load(System.Xml.XmlReader reader)
         {
             if (reader.LocalName != "comment")
@@ -106,6 +112,9 @@ namespace FlickrNet
                         break;
                     case "realname":
                         AuthorRealName = reader.Value;
+                        break;
+                    case "author_is_deleted":
+                        AuthorIsDeleted = reader.Value == "1";
                         break;
                     default:
                         UtilityMethods.CheckParsingException(reader);

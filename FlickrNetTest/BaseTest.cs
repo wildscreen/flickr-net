@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
 using FlickrNet;
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 
 namespace FlickrNetTest
 {
@@ -15,14 +13,22 @@ namespace FlickrNetTest
         Flickr _authInstance;
         Dictionary<string, string> _errorLog;
 
+        static int _testCount;
+
         protected Flickr Instance
         {
-            get { return _instance ?? (_instance = TestData.GetInstance()); }
+            get
+            {
+                return _instance ?? (_instance = TestData.GetInstance());
+            }
         }
 
         protected Flickr AuthInstance
         {
-            get { return _authInstance ?? (_authInstance = TestData.GetAuthInstance()); }
+            get
+            {
+                return _authInstance ?? (_authInstance = TestData.GetAuthInstance());
+            }
         }
 
         protected bool InstanceUsed
@@ -41,6 +47,7 @@ namespace FlickrNetTest
             _instance = null;
             _authInstance = null;
             _errorLog = new Dictionary<string, string>();
+            _testCount += 1;
         }
 
         protected void LogOnError(string key, string information)
@@ -51,7 +58,9 @@ namespace FlickrNetTest
         [TearDown]
         public void ErrorLogging()
         {
-            if (TestContext.CurrentContext.Result.Status != TestStatus.Failed) return;
+            if( (_testCount % 10) > 0 ) System.Threading.Thread.Sleep(200);
+
+            if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Failed) return;
 
             if (InstanceUsed)
             {

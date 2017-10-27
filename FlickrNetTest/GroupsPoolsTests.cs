@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Text;
-using System.Collections.Generic;
 
 using NUnit.Framework;
 using FlickrNet;
 using System.IO;
+using Shouldly;
 
 namespace FlickrNetTest
 {
@@ -19,7 +18,7 @@ namespace FlickrNetTest
         [Category("AccessTokenRequired")]
         public void GroupsPoolsAddBasicTest()
         {
-            Flickr f = TestData.GetAuthInstance();
+            Flickr f = AuthInstance;
 
             byte[] imageBytes = TestData.TestImageBytes;
             var s = new MemoryStream(imageBytes);
@@ -42,36 +41,18 @@ namespace FlickrNetTest
         }
 
         [Test]
-        [ExpectedException(typeof(SignatureRequiredException))]
         [Category("AccessTokenRequired")]
         public void GroupsPoolsAddNotAuthTestTest()
         {
-            Flickr f = TestData.GetAuthInstance();
+            string photoId = "12345";
 
-            byte[] imageBytes = TestData.TestImageBytes;
-            var s = new MemoryStream(imageBytes);
-            s.Position = 0;
-
-            string title = "Test Title";
-            string desc = "Test Description\nSecond Line";
-            string tags = "testtag1,testtag2";
-            string photoId = f.UploadPicture(s, "Test.jpg", title, desc, tags, false, false, false, ContentType.Other, SafetyLevel.Safe, HiddenFromSearch.Visible);
-
-            try
-            {
-                TestData.GetInstance().GroupsPoolsAdd(photoId, TestData.FlickrNetTestGroupId);
-            }
-            finally
-            {
-                f.PhotosDelete(photoId);
-            }
-
+            Should.Throw<SignatureRequiredException>(() => Instance.GroupsPoolsAdd(photoId, TestData.FlickrNetTestGroupId));
         }
 
         [Test]
         public void GroupsPoolGetPhotosFullParamTest()
         {
-            Flickr f = TestData.GetInstance();
+            Flickr f = Instance;
 
             PhotoCollection photos = f.GroupsPoolsGetPhotos(TestData.GroupId, null, TestData.TestUserId, PhotoSearchExtras.All, 1, 20);
 
@@ -91,7 +72,7 @@ namespace FlickrNetTest
         [Test]
         public void GroupsPoolGetPhotosDateAddedTest()
         {
-            Flickr f = TestData.GetInstance();
+            Flickr f = Instance;
 
             PhotoCollection photos = f.GroupsPoolsGetPhotos(TestData.GroupId);
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.IO;
-using System.Diagnostics;
 
 namespace FlickrNet
 {
@@ -108,17 +107,40 @@ namespace FlickrNet
 #if !WindowsCE
         private static string DownloadData(string method, string baseUrl, string data, string contentType, string authHeader)
         {
-            using (WebClient client = new WebClient())
+            Func<string> f = () =>
             {
-                client.Encoding = System.Text.Encoding.UTF8;
-                if (!string.IsNullOrEmpty(contentType)) client.Headers.Add("Content-Type", contentType);
-                if (!string.IsNullOrEmpty(authHeader)) client.Headers.Add("Authorization", authHeader);
+                using (WebClient client = new WebClient())
+                {
+                    client.Encoding = Encoding.UTF8;
+                    if (!string.IsNullOrEmpty(contentType)) client.Headers.Add("Content-Type", contentType);
+                    if (!string.IsNullOrEmpty(authHeader)) client.Headers.Add("Authorization", authHeader);
 
-                if (method == "POST")
-                    return client.UploadString(baseUrl, data);
-                else
+                    if (method == "POST")
+                    {
+                        return client.UploadString(baseUrl, data);
+                    }
                     return client.DownloadString(baseUrl);
+                }
+            };
+
+            try
+            {
+                return f();
             }
+            catch (WebException ex)
+            {
+                if (ex.Status == WebExceptionStatus.ProtocolError)
+                {
+                    var response = ex.Response as HttpWebResponse;
+                    if (response != null && (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout))
+                    {
+                        System.Threading.Thread.Sleep(1000);
+                        return f();
+                    }
+                }
+                throw;
+            }
+
         }
 #else
         private static string DownloadData(string method, string baseUrl, string data, string contentType, string authHeader)

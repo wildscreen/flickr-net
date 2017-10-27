@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using FlickrNet;
+using Shouldly;
 
 namespace FlickrNetTest
 {
@@ -11,10 +10,10 @@ namespace FlickrNetTest
     /// Summary description for OAuthTests
     /// </summary>
     [TestFixture]
-    public class OAuthTests
+    public class OAuthTests : BaseTest
     {
         [Test]
-        [Ignore]
+        [Ignore("Use this to generate a require token. Then add verifier to second test")]
         public void OAuthGetRequestTokenBasicTest()
         {
             Flickr f = TestData.GetSignedInstance();
@@ -37,7 +36,7 @@ namespace FlickrNetTest
         }
 
         [Test]
-        [Ignore]
+        [Ignore("Use this to generate an access token. Substitute the verifier from above test prior to running")]
         public void OAuthGetAccessTokenBasicTest()
         {
             Flickr f = TestData.GetSignedInstance();
@@ -60,27 +59,22 @@ namespace FlickrNetTest
         [Category("AccessTokenRequired")]
         public void OAuthPeopleGetPhotosBasicTest()
         {
-            Flickr f = TestData.GetAuthInstance();
-
-            PhotoCollection photos = f.PeopleGetPhotos("me");
+            PhotoCollection photos = AuthInstance.PeopleGetPhotos("me");
         }
 
         [Test]
-        [ExpectedException(typeof(OAuthException))]
         public void OAuthInvalidAccessTokenTest()
         {
-            Flickr.CacheDisabled = true;
+            Instance.ApiSecret = "asdasd";
 
-            Flickr f = TestData.GetInstance();
-            f.ApiSecret = "asdasd";
-            f.OAuthGetRequestToken("oob");
+            Should.Throw<OAuthException>(() => { Instance.OAuthGetRequestToken("oob"); });
         }
 
         [Test]
         [Category("AccessTokenRequired")]
         public void OAuthCheckTokenTest()
         {
-            Flickr f = TestData.GetAuthInstance();
+            Flickr f = AuthInstance;
 
             Auth a = f.AuthOAuthCheckToken();
 

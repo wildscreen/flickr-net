@@ -9,15 +9,8 @@ using Shouldly;
 namespace FlickrNetTest.Async
 {
     [TestFixture]
-    public class PhotosAsyncTests
+    public class PhotosAsyncTests : BaseTest
     {
-        [Test]
-        public void TestMethod1()
-        {
-            Flickr f = TestData.GetInstance();
-
-        }
-
         [Test]
         public void PhotosSearchRussianAsync()
         {
@@ -26,7 +19,7 @@ namespace FlickrNetTest.Async
             o.Tags = "фото";
             o.PerPage = 100;
 
-            Flickr f = TestData.GetInstance();
+            Flickr f = Instance;
 
             var w = new AsyncSubject<FlickrResult<PhotoCollection>>();
             f.PhotosSearchAsync(o, r => { w.OnNext(r); w.OnCompleted(); });
@@ -47,10 +40,10 @@ namespace FlickrNetTest.Async
         [Test]
         public void PhotosGetContactsPublicPhotosAsyncTest()
         {
-            Flickr f = TestData.GetInstance();
+            Flickr f = Instance;
 
             var w = new AsyncSubject<FlickrResult<PhotoCollection>>();
-            f.PhotosGetContactsPublicPhotosAsync(TestData.TestUserId, 50, true, true, true, PhotoSearchExtras.All, r => { w.OnNext(r); w.OnCompleted(); });
+            f.PhotosGetContactsPublicPhotosAsync(TestData.TestUserId, 5, true, true, true, PhotoSearchExtras.All, r => { w.OnNext(r); w.OnCompleted(); });
             var result = w.Next().First();
 
             Assert.IsFalse(result.HasError);
@@ -69,7 +62,7 @@ namespace FlickrNetTest.Async
 
             DateTime[] uploadDates = { date1, date2, date3 };
 
-            Flickr f = TestData.GetAuthInstance();
+            Flickr f = AuthInstance;
 
             var w = new AsyncSubject<FlickrResult<PhotoCountCollection>>();
             f.PhotosGetCountsAsync(uploadDates, false, r => { w.OnNext(r); w.OnCompleted(); });
@@ -95,7 +88,7 @@ namespace FlickrNetTest.Async
         [Test]
         public void PhotosGetExifAsyncTest()
         {
-            Flickr f = TestData.GetInstance();
+            Flickr f = Instance;
 
             var w = new AsyncSubject<FlickrResult<ExifTagCollection>>();
             f.PhotosGetExifAsync(TestData.PhotoId, r => { w.OnNext(r); w.OnCompleted(); });
@@ -108,7 +101,7 @@ namespace FlickrNetTest.Async
         [Test]
         public void PhotosGetRecentAsyncTest()
         {
-            Flickr f = TestData.GetInstance();
+            Flickr f = Instance;
             var w = new AsyncSubject<FlickrResult<PhotoCollection>>();
             f.PhotosGetRecentAsync(1, 50, PhotoSearchExtras.All, r => { w.OnNext(r); w.OnCompleted(); });
             var result = w.Next().First();
