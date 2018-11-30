@@ -72,6 +72,10 @@ namespace FlickrNet
         public string CoverPhotoFarm { get; set; }
 
         /// <summary>
+        /// The total number of photos and videos.
+        /// </summary>
+        public int Total { get; set; }
+        /// <summary>
         /// The number of photos in this photoset.
         /// </summary>
         public int NumberOfPhotos { get; set; }
@@ -177,12 +181,15 @@ namespace FlickrNet
                     case "total":
                         break;
                     case "photos":
+                        NumberOfPhotos = string.IsNullOrEmpty(reader.Value) ? -1 : reader.ReadContentAsInt();
+                        break;
                     case "count_photos":
-                        NumberOfPhotos = reader.ReadContentAsInt();
+                        Total = NumberOfPhotos;
+                        NumberOfPhotos = string.IsNullOrEmpty(reader.Value) ? -1 : reader.ReadContentAsInt();
                         break;
                     case "videos":
                     case "count_videos":
-                        NumberOfVideos = reader.ReadContentAsInt();
+                        NumberOfVideos = string.IsNullOrEmpty(reader.Value) ? -1 : reader.ReadContentAsInt();
                         break;
                     case "needs_interstitial":
                         // Who knows what this is for.
@@ -198,11 +205,11 @@ namespace FlickrNet
                         break;
                     case "view_count":
                     case "count_views":
-                        ViewCount = reader.ReadContentAsInt();
+                        ViewCount = string.IsNullOrEmpty(reader.Value) ? -1 : reader.ReadContentAsInt();
                         break;
                     case "comment_count":
                     case "count_comments":
-                        CommentCount = reader.ReadContentAsInt();
+                        CommentCount = string.IsNullOrEmpty(reader.Value) ? -1 : reader.ReadContentAsInt();
                         break;
                     case "can_comment":
                         CanComment = reader.Value == "1";
@@ -214,6 +221,11 @@ namespace FlickrNet
                         UtilityMethods.CheckParsingException(reader);
                         break;
                 }
+            }
+
+            if (Total == 0)
+            {
+                Total = NumberOfPhotos + NumberOfVideos;
             }
 
             reader.Read();
